@@ -52,7 +52,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
-  InfoIcon,
   ServiceGlyph,
   ToothIcon,
   UserIcon,
@@ -332,14 +331,6 @@ export function Appointment({ request }: AppointmentProps) {
         <div className="booking">
           <Reveal>
             <div className="panel">
-              <div className="alert alert--info" role="note" style={{ marginBottom: 20 }}>
-                <InfoIcon />
-                <span>
-                  Demo mode: bookings are stored only in this browser and are not sent to the
-                  clinic.
-                </span>
-              </div>
-
               {step !== 'done' ? (
                 <ol className="steps" aria-label="Booking progress">
                   {STEPS.map((s) => {
