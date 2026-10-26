@@ -36,7 +36,7 @@ export function About() {
                   className="doctor__photo"
                   src={portraitUrl}
                   width={640}
-                  height={640}
+                  height={800}
                   alt={`Portrait of Dr. ${CLINIC.doctor.fullName}, ${CLINIC.doctor.title}`}
                   loading="lazy"
                   decoding="async"
