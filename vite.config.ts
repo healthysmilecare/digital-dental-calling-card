@@ -40,7 +40,17 @@ function cspPlugin(): Plugin {
   }
 }
 
+/**
+ * Public base path. GitHub Pages serves project sites from
+ * https://<user>.github.io/<repo>/, so the deploy workflow sets
+ * BASE_PATH=/<repo>/. Locally it defaults to '/'.
+ */
+const basePath = process.env.BASE_PATH && process.env.BASE_PATH.trim() !== ''
+  ? process.env.BASE_PATH
+  : '/'
+
 export default defineConfig({
+  base: basePath,
   plugins: [react(), cspPlugin()],
   build: {
     target: 'es2022',
