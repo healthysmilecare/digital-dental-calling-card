@@ -819,7 +819,6 @@ export function Appointment({ request }: AppointmentProps) {
           <div className="mine">
             <div className="mine__head">
               <h3 className="h3">Your upcoming appointments</h3>
-              <span className="pill pill--pink">Saved in this browser</span>
             </div>
             {upcoming.length === 0 ? (
               <div className="slots__empty">No upcoming appointments yet. Your bookings will appear here.</div>
