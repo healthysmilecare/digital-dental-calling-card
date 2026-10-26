@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Brand } from './Logo'
 import { CloseIcon, MenuIcon } from './Icons'
 import { scrollToSection } from '../lib/scroll'
@@ -24,24 +24,64 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Highlight the section occupying the middle of the viewport.
-  useEffect(() => {
-    if (!('IntersectionObserver' in window)) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const hit = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        if (hit) setActive(hit.target.id as SectionId)
-      },
-      { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.01, 0.2] },
-    )
+  /**
+   * Active-section tracking.
+   *
+   * Deterministic rule: the active section is the last one whose top edge is
+   * above a marker placed 35% down the viewport (or the final section once
+   * the page is scrolled to the bottom). After a nav click the highlight is
+   * locked to the target until scrolling settles, so it does not flicker
+   * through the sections the smooth scroll passes over.
+   */
+  const lockRef = useRef<SectionId | null>(null)
+  const unlockTimer = useRef<number | null>(null)
+
+  const computeActive = useCallback(() => {
+    if (lockRef.current) return
+    const marker = window.scrollY + window.innerHeight * 0.35
+    const atBottom =
+      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+    let current: SectionId = SECTIONS[0].id
     for (const s of SECTIONS) {
       const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
+      if (!el) continue
+      const top = el.getBoundingClientRect().top + window.scrollY
+      if (top <= marker) current = s.id
     }
-    return () => observer.disconnect()
+    if (atBottom) current = SECTIONS[SECTIONS.length - 1]!.id
+    setActive(current)
   }, [])
+
+  const releaseLock = useCallback(() => {
+    if (unlockTimer.current !== null) window.clearTimeout(unlockTimer.current)
+    unlockTimer.current = window.setTimeout(() => {
+      lockRef.current = null
+      unlockTimer.current = null
+      computeActive()
+    }, 160)
+  }, [computeActive])
+
+  useEffect(() => {
+    let raf = 0
+    const onScroll = () => {
+      if (lockRef.current) releaseLock()
+      if (!raf) {
+        raf = window.requestAnimationFrame(() => {
+          raf = 0
+          computeActive()
+        })
+      }
+    }
+    computeActive()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) window.cancelAnimationFrame(raf)
+      if (unlockTimer.current !== null) window.clearTimeout(unlockTimer.current)
+    }
+  }, [computeActive, releaseLock])
 
   // Close the mobile drawer on Escape and on resize to desktop.
   useEffect(() => {
@@ -62,6 +102,10 @@ export function Navbar() {
 
   const go = (id: SectionId) => {
     setOpen(false)
+    setActive(id)
+    lockRef.current = id
+    // Release even if no scroll event follows (already at the target).
+    releaseLock()
     scrollToSection(id)
     if (window.history.replaceState) {
       window.history.replaceState(null, '', `#${id}`)
