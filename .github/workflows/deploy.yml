@@ -32,11 +32,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve site base path
+        id: base
+        # Project sites live under https://<owner>.github.io/<repo>/.
+        # A repo named <owner>.github.io, or one with a custom domain
+        # (public/CNAME), is served from the root instead.
+        run: |
+          repo="${GITHUB_REPOSITORY#*/}"
+          if [[ "$repo" == *.github.io || -f public/CNAME ]]; then
+            echo "path=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=/$repo/" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Base path: $(tail -n1 "$GITHUB_OUTPUT")"
+
       - name: Typecheck and build
         run: npm run build
         env:
-          # Project sites live under https://<owner>.github.io/<repo>/
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: ${{ steps.base.outputs.path }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
