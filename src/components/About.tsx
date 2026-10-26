@@ -1,4 +1,5 @@
 import { CLINIC } from '../data/clinic'
+import portraitUrl from '../assets/doctor-portrait.jpg'
 import { CalendarIcon, CheckIcon, HeartIcon, LeafIcon, MailIcon, PhoneIcon, PinIcon, StarIcon } from './Icons'
 import { Reveal } from './Reveal'
 
@@ -21,15 +22,6 @@ const VALUES = [
   },
 ] as const
 
-function getInitials(fullName: string): string {
-  return fullName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 3)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
-}
-
 export function About() {
   const yearsOpen = new Date().getFullYear() - CLINIC.establishedYear
 
@@ -39,8 +31,16 @@ export function About() {
         <div className="about__grid">
           <Reveal>
             <article className="doctor" aria-label={`About Dr. ${CLINIC.doctor.fullName}`}>
-              <div className="doctor__portrait" aria-hidden="true">
-                <span className="doctor__initials">{getInitials(CLINIC.doctor.fullName)}</span>
+              <div className="doctor__portrait">
+                <img
+                  className="doctor__photo"
+                  src={portraitUrl}
+                  width={640}
+                  height={640}
+                  alt={`Portrait of Dr. ${CLINIC.doctor.fullName}, ${CLINIC.doctor.title}`}
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <h3 className="doctor__name">
                 Dr. {CLINIC.doctor.fullName}
